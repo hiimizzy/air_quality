@@ -96,3 +96,6 @@ if os.path.exists(DATA_PATH) and os.stat(DATA_PATH).st_size > 0:
     st.dataframe(df)
 else:
     st.info("Nenhum dado coletado ainda.")
+
+
+#  streamlit run app.py
