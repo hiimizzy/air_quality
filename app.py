@@ -3,25 +3,42 @@ import requests
 import pandas as pd
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# =============================
+# CONFIGURAÇÃO DA PÁGINA
+# =============================
+st.set_page_config(
+    page_title="Qualidade do Ar - SP",
+    layout="centered"
+)
+
+# =============================
+# CARREGAR VARIÁVEIS DE AMBIENTE
+# =============================
+load_dotenv()
+
+WAQI_TOKEN = os.getenv("WAQI_TOKEN")
+
+if not WAQI_TOKEN:
+    st.error("❌ Token WAQI não encontrado. Verifique o arquivo .env")
+    st.stop()  # para a execução do Streamlit de forma limpa
 
 # =============================
 # CONFIGURAÇÕES
 # =============================
-
-WAQI_TOKEN = "d7ba3e94f75ec75b7a30a6f40bad28e906326586"
 CITY_URL = "https://api.waqi.info/feed/@8490/"  # Parque D. Pedro II
 DATA_PATH = "data/dataset.csv"
 
 # =============================
 # FUNÇÃO: BUSCAR DADOS DA API
 # =============================
-
 def fetch_air_quality():
     url = f"{CITY_URL}?token={WAQI_TOKEN}"
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     data = response.json()
 
-    if data["status"] != "ok":
+    if data.get("status") != "ok":
         st.error("Erro ao acessar a API WAQI")
         return None
 
@@ -37,27 +54,23 @@ def fetch_air_quality():
         "co": iaqi.get("co", {}).get("v"),
         "so2": iaqi.get("so2", {}).get("v"),
         "temp": iaqi.get("t", {}).get("v"),
-        "humidity": iaqi.get("h", {}).get("v")
+        "humidity": iaqi.get("h", {}).get("v"),
     }
 
     return pd.DataFrame([row])
 
 # =============================
-# FUNÇÃO: SALVAR DADOS (SEM ERRO)
+# FUNÇÃO: SALVAR DADOS NO CSV
 # =============================
-
 def save_data(df_new):
-    # Se o arquivo NÃO existe → cria direto
-    if not os.path.exists(DATA_PATH):
+    os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
+
+    # Arquivo não existe ou está vazio
+    if not os.path.exists(DATA_PATH) or os.stat(DATA_PATH).st_size == 0:
         df_new.to_csv(DATA_PATH, index=False)
         return df_new
 
-    # Se existe mas está vazio → sobrescreve
-    if os.stat(DATA_PATH).st_size == 0:
-        df_new.to_csv(DATA_PATH, index=False)
-        return df_new
-
-    # Caso normal → concatena
+    # Caso normal: concatena histórico
     df_old = pd.read_csv(DATA_PATH)
     df_all = pd.concat([df_old, df_new], ignore_index=True)
     df_all.to_csv(DATA_PATH, index=False)
@@ -67,9 +80,6 @@ def save_data(df_new):
 # =============================
 # INTERFACE STREAMLIT
 # =============================
-
-st.set_page_config(page_title="Qualidade do Ar - SP", layout="centered")
-
 st.title("🌫️ Qualidade do Ar — Parque D. Pedro II (SP)")
 
 if st.button("📡 Coletar dados agora"):
@@ -77,14 +87,12 @@ if st.button("📡 Coletar dados agora"):
 
     if df_new is not None:
         df_all = save_data(df_new)
-
         st.success("Dados coletados e salvos com sucesso!")
-        st.metric("AQI Atual", int(df_new["aqi"][0]))
+        st.metric("AQI Atual", int(df_new["aqi"].iloc[0]))
 
 # =============================
 # VISUALIZAÇÃO DOS DADOS
 # =============================
-
 if os.path.exists(DATA_PATH) and os.stat(DATA_PATH).st_size > 0:
     df = pd.read_csv(DATA_PATH)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -96,6 +104,7 @@ if os.path.exists(DATA_PATH) and os.stat(DATA_PATH).st_size > 0:
     st.dataframe(df)
 else:
     st.info("Nenhum dado coletado ainda.")
-
-
-#  streamlit run app.py
+# "c:\Users\arauj\OneDrive\Área de Trabalho\air_quality_sp\air_quality"
+# 
+# 
+# streamlit run app.py

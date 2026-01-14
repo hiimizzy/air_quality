@@ -2,11 +2,13 @@ import requests
 import pandas as pd
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
 # =========================
 # CONFIGURAÇÕES
 # =========================
-WAQI_TOKEN = "SEU_TOKEN_AQUI"
+load_dotenv()
+WAQI_TOKEN = os.getenv("WAQI_TOKEN")
 CITY_URL = "https://api.waqi.info/feed/brazil/sao-paulo/parque-d.pedro-ii/"
 DATA_PATH = "data/dataset.csv"
 
