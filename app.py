@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # CONFIGURAÇÃO DA PÁGINA
 # =============================
 st.set_page_config(
-    page_title="Qualidade do Ar - SP",
+    page_title="Qualidade do Ar",
     layout="centered"
 )
 
@@ -22,7 +22,7 @@ WAQI_TOKEN = os.getenv("WAQI_TOKEN")
 
 if not WAQI_TOKEN:
     st.error("❌ Token WAQI não encontrado. Verifique o arquivo .env")
-    st.stop()  # para a execução do Streamlit de forma limpa
+    st.stop()  
 
 # =============================
 # CONFIGURAÇÕES
@@ -31,7 +31,7 @@ CITY_URL = "https://api.waqi.info/feed/@8490/"  # Parque D. Pedro II
 DATA_PATH = "data/dataset.csv"
 
 # =============================
-# FUNÇÃO: BUSCAR DADOS DA API
+# BUSCAR DADOS DA API
 # =============================
 def fetch_air_quality():
     url = f"{CITY_URL}?token={WAQI_TOKEN}"
@@ -60,7 +60,7 @@ def fetch_air_quality():
     return pd.DataFrame([row])
 
 # =============================
-# FUNÇÃO: SALVAR DADOS NO CSV
+# SALVAR DADOS NO CSV
 # =============================
 def save_data(df_new):
     os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
@@ -80,7 +80,7 @@ def save_data(df_new):
 # =============================
 # INTERFACE STREAMLIT
 # =============================
-st.title("🌫️ Qualidade do Ar — Parque D. Pedro II (SP)")
+st.title("🌫️>⩊< Qualidade do Ar — Parque D. Pedro II (SP)")
 
 if st.button("📡 Coletar dados agora"):
     df_new = fetch_air_quality()
@@ -106,5 +106,5 @@ else:
     st.info("Nenhum dado coletado ainda.")
 # "c:\Users\arauj\OneDrive\Área de Trabalho\air_quality_sp\air_quality"
 # 
-# 
+# cd air_quality
 # streamlit run app.py
